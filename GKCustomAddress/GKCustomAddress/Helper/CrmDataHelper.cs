@@ -69,6 +69,24 @@ namespace GKCustomAddress.Helper
                 tracingService.Trace("Max Address Number value: " + maxAddressNumber);
 
             }
+            if(maxAddressNumber==0)
+            {
+                fetchXml = @"<fetch distinct='false' mapping='logical' aggregate='true'>   
+             <entity name='customeraddress'>   
+             <attribute name='addressnumber' aggregate='max' alias='maxAddressNumber'/> 
+            <filter type='and'>
+             <condition attribute='parentid' operator='eq' value='" + parentId + "'/></filter></entity></fetch>";
+
+                EntityCollection maxBatch_result1 = service.RetrieveMultiple(new FetchExpression(fetchXml));
+
+                foreach (var c in maxBatch_result1.Entities)
+                {
+                    maxAddressNumber = ((int)((AliasedValue)c["maxAddressNumber"]).Value);
+                    tracingService.Trace("Max Address Number from address entity value: " + maxAddressNumber);
+
+                }
+            }
+           
             return maxAddressNumber + 1;
         }
         public Guid GetAddressId(IOrganizationService service, int addressnumber,Guid parentId)

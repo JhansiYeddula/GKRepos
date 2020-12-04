@@ -31,6 +31,7 @@ namespace GKCustomAddress
             }
             if(context.Depth>1)
             {
+                tracingService.Trace("depth");
                 return;
             }
             //Entity entity = context.PostEntityImages["PostImage"];
@@ -93,6 +94,7 @@ namespace GKCustomAddress
                     //}
                      
                         tracingService.Trace("Object Type code" + objectTypeCode);
+                    tracingService.Trace("ADdress number::" + addressNumber);
                     if(objectTypeCode!=1 && objectTypeCode!=2)
                     {
                         return;
@@ -128,7 +130,7 @@ namespace GKCustomAddress
                 }
                 catch (Exception ex)
                 {
-                    tracingService.Trace("HandleCustomAddress: {0}", ex.ToString());
+                    tracingService.Trace("HandleCustom OOB Address: {0}", ex.ToString());
                     throw;
                 }
                 //catch (FaultException<OrganizationServiceFault> ex)
@@ -183,7 +185,7 @@ namespace GKCustomAddress
                 AddressEntity[AddressAttributes.freighttermscode] = entity[CustomAddressAttributes.poad_freighttermscode] != null ? ((OptionSetValue)entity[CustomAddressAttributes.poad_freighttermscode]) : null;
 
             if (entity.Contains(CustomAddressAttributes.poad_latitude))
-                AddressEntity[AddressAttributes.latitude] = (float?)entity[CustomAddressAttributes.poad_latitude];
+                AddressEntity[AddressAttributes.latitude] = (double?)entity[CustomAddressAttributes.poad_latitude];
 
             if (entity.Contains(CustomAddressAttributes.poad_line1))
                 AddressEntity[AddressAttributes.line1] = entity[CustomAddressAttributes.poad_line1]?.ToString();
@@ -195,7 +197,7 @@ namespace GKCustomAddress
                 AddressEntity[AddressAttributes.line3] = entity[CustomAddressAttributes.poad_line3]?.ToString();
 
             if (entity.Contains(CustomAddressAttributes.poad_longitude))
-                AddressEntity[AddressAttributes.longitude] = (float?)entity[CustomAddressAttributes.poad_longitude];
+                AddressEntity[AddressAttributes.longitude] = (double?)entity[CustomAddressAttributes.poad_longitude];
             
             if (entity.Contains(CustomAddressAttributes.poad_name))
                 AddressEntity[AddressAttributes.name] = entity[CustomAddressAttributes.poad_name]?.ToString();

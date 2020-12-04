@@ -38,7 +38,13 @@ namespace GKCustomAddress.Helper
         public static string poad_primarycontactname = "poad_primarycontactname";
         public static string poad_composite = "poad_composite";
         public static string poad_customerid = "poad_customerid";
-       // public static string poad_accountid = "poad_accountid";
+
+        public static string gk_externalid = "gk_externalid";
+        public static string gk_addressvalidationstatus = "gk_addressvalidationstatus";
+        public static string gk_isaddresssynchronized = "gk_isaddresssynchronized";
+      
+
+        // public static string poad_accountid = "poad_accountid";
 
     }
     public static class AddressAttributes
@@ -71,7 +77,27 @@ namespace GKCustomAddress.Helper
         public static string primarycontactname = "primarycontactname";
         public static string objecttypecode = "objecttypecode";
         public static string parentid    = "parentid";
-        
+
+        public static string gk_address1_externalid = "gk_address1_externalid";
+        public static string gk_address1_validationstatusdescription = "gk_address1_validationstatusdescription";
+        public static string gk_isprimarysynhced = "gk_isprimarysynhced";
+        public static string gk_address2_externalid = "gk_address2_externalid";
+        public static string gk_address2_validationstatusdescription = "gk_address2_validationstatusdescription";
+        public static string gk_isbilltosynched = "gk_isbilltosynched";
+        public static string gk_shiptocity = "gk_shiptocity";
+        public static string gk_shiptocountry = "gk_shiptocountry";
+        public static string gk_shiptostate = "gk_shiptostate";
+        public static string gk_shiptostreet = "gk_shiptostreet";
+        public static string gk_shiptozip = "gk_shiptozip";
+        public static string gk_shiptoaddresstypecode = "gk_shiptoaddresstypecode";
+        public static string gk_address3_externalid = "gk_address3_externalid";
+        public static string gk_address3_validationstatusdescription = "gk_address3_validationstatusdescription";
+        public static string gk_isshiptosynched = "gk_isshiptosynched";
+        public static string gk_shiptocounty = "gk_shiptocounty";
+      
+
+
+
     }
     public class CustomAddressEntity
     {
