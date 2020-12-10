@@ -23,7 +23,7 @@ namespace GKCustomAddress
 
 
             
-            tracingService.Trace("Entered in R");
+            tracingService.Trace("Entered in CustomAddress");
             
             if (context != null)
             {
@@ -31,6 +31,7 @@ namespace GKCustomAddress
             }
             if (context.Depth > 1)
             {
+                tracingService.Trace("depth is greter than 1 returned");
                 return;
             }
             //Entity entity = context.PostEntityImages["PostImage"];
@@ -75,29 +76,33 @@ namespace GKCustomAddress
                         {
                             if (customerAddressId == Guid.Empty)
                             {
-                                customAddressObject = CreateCustomerAddressObject(e,objectTypeCode,entity);
+                                customAddressObject = CreateCustomerAddressObject(e,objectTypeCode,entity, addressNumber,service,tracingService);
                                 service.Create(customAddressObject);
                             }
                             else
                             {
-                                customAddressObject = CreateCustomerAddressObject(e,objectTypeCode,entity);
+                                customAddressObject = CreateCustomerAddressObject(e,objectTypeCode,entity, addressNumber,service,tracingService);
                                 customAddressObject.Id = customerAddressId;
                                 service.Update(customAddressObject);
                             }
                         }
                     }
-                    if(objectTypeCode==1 &&  entity.Attributes.Contains(AddressAttributes.gk_shiptoaddresstypecode) && entity.Attributes[AddressAttributes.gk_shiptoaddresstypecode]!=null)
+                    tracingService.Trace("check adress");
+                    if(objectTypeCode==1 &&  entity.Attributes.Contains(AddressAttributes.gk_shiptoaddresstype) && entity.Attributes[AddressAttributes.gk_shiptoaddresstype] !=null)
                     {
+                        tracingService.Trace("Address3");
                         addressNumber = 3;
                         customerAddressId = objHelper.GetParentIdCustomerAddress(service, addressNumber, entity.Id, objectTypeCode);
                         if (customerAddressId == Guid.Empty)
                         {
-                            customAddressObject = CreateCustomerAddressObject(null, objectTypeCode, entity);
+                            tracingService.Trace("createaddress3");
+                            customAddressObject = CreateCustomerAddressObject(null, objectTypeCode, entity, addressNumber,service,tracingService);
                             service.Create(customAddressObject);
                         }
                         else
                         {
-                            customAddressObject = CreateCustomerAddressObject(null, objectTypeCode, entity);
+                            tracingService.Trace("updateaddress3");
+                            customAddressObject = CreateCustomerAddressObject(null, objectTypeCode, entity, addressNumber,service,tracingService);
                             customAddressObject.Id = customerAddressId;
                             service.Update(customAddressObject);
                         }
@@ -119,11 +124,26 @@ namespace GKCustomAddress
             }
         }
 
-        private Entity CreateCustomerAddressObject (Entity entity,int objectTypeCode,Entity sourceEntity)
+        private Entity CreateCustomerAddressObject (Entity entity,int objectTypeCode,Entity sourceEntity,int addressnumber,IOrganizationService service,ITracingService tracingService)
         {
-           
+            bool isShipTo = false;
+            bool isBillTo = false;
+            bool isPrimary = false;
+            string composite = string.Empty;
+            string line1 = string.Empty;
+            string line2 = string.Empty;
+            string line3 = string.Empty;
+            string city = string.Empty;
+            string postalCode = string.Empty;
+            string stateonprovince = string.Empty;
+            string country = string.Empty;
+
+            //int addressnumber = 0;
             Entity customAddressEntity = new Entity("poad_customaddress");
-            int addressnumber = (int)entity[AddressAttributes.addressnumber];
+            //if (objectTypeCode == 1 && entity.Attributes.Contains(AddressAttributes.addressnumber) == false)
+            //    addressnumber = 3;
+            //else
+            // addressnumber = (int)entity[AddressAttributes.addressnumber];
             if(addressnumber==1)
             {
                 customAddressEntity[CustomAddressAttributes.poad_name] = "Primary";
@@ -131,7 +151,15 @@ namespace GKCustomAddress
                     customAddressEntity[CustomAddressAttributes.gk_externalid]= sourceEntity[AddressAttributes.gk_address1_externalid]?.ToString();
                 if (sourceEntity.Attributes.Contains(AddressAttributes.gk_address1_validationstatusdescription))
                     customAddressEntity[CustomAddressAttributes.gk_addressvalidationstatus] = sourceEntity[AddressAttributes.gk_address1_validationstatusdescription]?.ToString();
-                if((bool?)sourceEntity[AddressAttributes.gk_isprimarysynhced]==true)
+                if (sourceEntity.Attributes.Contains(AddressAttributes.gk_isprimarysynhced) || sourceEntity.Attributes.Contains("gk_isprimaryaddresssynched"))
+                {
+                    if (objectTypeCode == 1)
+                        isPrimary = (bool)sourceEntity[AddressAttributes.gk_isprimarysynhced];
+                    else
+                        isPrimary = (bool)sourceEntity["gk_isprimaryaddresssynched"];
+                }
+
+                if (isPrimary==true)
                 customAddressEntity[CustomAddressAttributes.gk_isaddresssynchronized] = "true";
                 else
                     customAddressEntity[CustomAddressAttributes.gk_isaddresssynchronized] = "false";
@@ -145,7 +173,14 @@ namespace GKCustomAddress
                  customAddressEntity[CustomAddressAttributes.gk_externalid] = sourceEntity[AddressAttributes.gk_address2_externalid]?.ToString();
                 if (sourceEntity.Attributes.Contains(AddressAttributes.gk_address2_validationstatusdescription))
                     customAddressEntity[CustomAddressAttributes.gk_addressvalidationstatus] = sourceEntity[AddressAttributes.gk_address2_validationstatusdescription]?.ToString();
-                if ((bool?)sourceEntity[AddressAttributes.gk_isbilltosynched] == true)
+                if (sourceEntity.Attributes.Contains(AddressAttributes.gk_isbilltosynched) || sourceEntity.Attributes.Contains("gk_isbilltoaddresssynched"))
+                {
+                    if (objectTypeCode == 1)
+                        isBillTo = (bool)sourceEntity[AddressAttributes.gk_isbilltosynched];
+                    else
+                        isBillTo = (bool)sourceEntity["gk_isbilltoaddresssynched"];
+                }
+                if (isBillTo == true)
                     customAddressEntity[CustomAddressAttributes.gk_isaddresssynchronized] = "true";
                 else
                     customAddressEntity[CustomAddressAttributes.gk_isaddresssynchronized] = "false  ";
@@ -153,31 +188,70 @@ namespace GKCustomAddress
             if (addressnumber == 3)
             {
                 customAddressEntity[CustomAddressAttributes.poad_name] = "Ship To";
-                if (sourceEntity.Attributes.Contains(AddressAttributes.gk_address1_validationstatusdescription))
+                if (sourceEntity.Attributes.Contains(AddressAttributes.gk_address3_externalid))
                     customAddressEntity[CustomAddressAttributes.gk_externalid] = sourceEntity[AddressAttributes.gk_address3_externalid]?.ToString();
-                if (sourceEntity.Attributes.Contains(AddressAttributes.gk_address1_validationstatusdescription))
+                if (sourceEntity.Attributes.Contains(AddressAttributes.gk_address3_validationstatusdescription))
                     customAddressEntity[CustomAddressAttributes.gk_addressvalidationstatus] = sourceEntity[AddressAttributes.gk_address3_validationstatusdescription]?.ToString();
-                if ((bool?)sourceEntity[AddressAttributes.gk_isshiptosynched] == true)
+                if (sourceEntity.Attributes.Contains(AddressAttributes.gk_isshiptosynched) || sourceEntity.Attributes.Contains("gk_isshiptoaddresssynched"))
+                {
+                    if (objectTypeCode == 1)
+                        isShipTo = (bool)sourceEntity[AddressAttributes.gk_isshiptosynched];
+                    else
+                        isShipTo = (bool)sourceEntity["gk_isshiptoaddresssynched"];
+                }
+                if (isShipTo == true)
                     customAddressEntity[CustomAddressAttributes.gk_isaddresssynchronized] = "true";
                 else
                     customAddressEntity[CustomAddressAttributes.gk_isaddresssynchronized] = "false";
                 if (objectTypeCode == 1)
                 {
                     if (sourceEntity.Attributes.Contains(AddressAttributes.gk_shiptocity))
-                        customAddressEntity[CustomAddressAttributes.poad_city] = sourceEntity[AddressAttributes.gk_shiptocity]?.ToString();
+                    {
+                        city = sourceEntity[AddressAttributes.gk_shiptocity]?.ToString();
+                        customAddressEntity[CustomAddressAttributes.poad_city] = city;
+
+                    }
                     if (sourceEntity.Attributes.Contains(AddressAttributes.gk_shiptocountry))
-                        customAddressEntity[CustomAddressAttributes.poad_country] = sourceEntity[AddressAttributes.gk_shiptocountry]?.ToString();
+                    {
+                        country = sourceEntity[AddressAttributes.gk_shiptocountry]?.ToString();
+                        customAddressEntity[CustomAddressAttributes.poad_country] = country;
+                    }
                     if (sourceEntity.Attributes.Contains(AddressAttributes.gk_shiptostate))
-                        customAddressEntity[CustomAddressAttributes.poad_stateorprovince] = sourceEntity[AddressAttributes.gk_shiptostate]?.ToString();
+                    {
+                        stateonprovince = sourceEntity[AddressAttributes.gk_shiptocountry]?.ToString();
+                        customAddressEntity[CustomAddressAttributes.poad_stateorprovince] = stateonprovince;
+                    }
                     if (sourceEntity.Attributes.Contains(AddressAttributes.gk_shiptostreet))
-                        customAddressEntity[CustomAddressAttributes.poad_line1] = sourceEntity[AddressAttributes.gk_shiptostreet]?.ToString();
+                    {
+                        line1 = sourceEntity[AddressAttributes.gk_shiptostreet]?.ToString();
+                        customAddressEntity[CustomAddressAttributes.poad_line1] = line1;
+                    }
+                    if (sourceEntity.Attributes.Contains(AddressAttributes.gk_shiptostreet2))
+                    {
+                        line2 = sourceEntity[AddressAttributes.gk_shiptostreet2]?.ToString();
+                        customAddressEntity[CustomAddressAttributes.poad_line2] = line2;
+                    }
                     if (sourceEntity.Attributes.Contains(AddressAttributes.gk_shiptozip))
-                        customAddressEntity[CustomAddressAttributes.poad_postalcode] = sourceEntity[AddressAttributes.gk_shiptozip]?.ToString();
+                    {
+                        postalCode = sourceEntity[AddressAttributes.gk_shiptozip]?.ToString();
+                        customAddressEntity[CustomAddressAttributes.poad_postalcode] = postalCode;
+                    }
                     if (sourceEntity.Attributes.Contains(AddressAttributes.gk_shiptoaddresstypecode))
                         customAddressEntity[CustomAddressAttributes.poad_addresstypecode] = sourceEntity[AddressAttributes.gk_shiptoaddresstypecode] != null ? ((OptionSetValue)entity[AddressAttributes.gk_shiptoaddresstypecode]) : null;
                     if (sourceEntity.Attributes.Contains(AddressAttributes.gk_shiptocounty))
                         customAddressEntity[CustomAddressAttributes.poad_county] = sourceEntity[AddressAttributes.gk_shiptocounty]?.ToString();
                     customAddressEntity[CustomAddressAttributes.poad_customerid] = new EntityReference("account", sourceEntity.Id);
+
+                    var array = new[] { line1, line2, city, postalCode,country };
+                    composite = string.Join(",", array.Where(s => !string.IsNullOrEmpty(s)));
+
+                  //  composite = string.Join(",  ", line1, line2, city, postalCode, stateonprovince, country);
+                    if (composite != string.Empty)
+                    {
+                        tracingService.Trace("composite::" + composite);
+                        sourceEntity[AddressAttributes.gk_shiptocomposite] = composite;
+                        service.Update(sourceEntity);
+                     }
                     return customAddressEntity;
                 }
             }

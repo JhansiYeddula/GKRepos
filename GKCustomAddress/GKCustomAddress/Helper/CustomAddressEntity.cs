@@ -94,7 +94,10 @@ namespace GKCustomAddress.Helper
         public static string gk_address3_validationstatusdescription = "gk_address3_validationstatusdescription";
         public static string gk_isshiptosynched = "gk_isshiptosynched";
         public static string gk_shiptocounty = "gk_shiptocounty";
-      
+        public static string gk_shiptoaddresstype = "gk_shiptoaddresstype";
+        public static string gk_shiptocomposite = "gk_shiptocomposite";
+        public static string gk_shiptostreet2 = "gk_shiptostreet2";
+
 
 
 
